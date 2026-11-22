@@ -1,10 +1,12 @@
 // Lecteur « Niveau 2 : accords + mélodie » : tablature en couleurs avec deux couches
 // (mélodie = doigts, accompagnement = pouce), forme d'accord de la main gauche, mains séparées.
 import { Clock, click, playNote, keepAwake } from './audio.js';
+import { icon } from './icons.js';
 import { STRINGS } from './theory.js';
 import { esc, Fretboard, chordDiagram, chordLabel, noteName, STRING_CLASS, fingerLegend } from './ui.js';
 import { parsePiece, ACC_STYLES } from './arrange.js';
 import { store } from './store.js';
+import { practiceTimer } from './session.js';
 
 export function mountFingerstyle(el, piece, opts = {}) {
   const st = {
@@ -28,6 +30,7 @@ export function mountFingerstyle(el, piece, opts = {}) {
   let resumeAt = 0;
   let stepK = 0;
   let lastKey = '';
+  const timer = practiceTimer();
 
   function prepare() {
     P = parsePiece(piece, { acc: st.acc });
@@ -47,7 +50,7 @@ export function mountFingerstyle(el, piece, opts = {}) {
       <h1 class="pl-title">${esc(piece.title)}</h1>
       <div class="muted">${esc(piece.composer || '')}</div></div>
       <div class="pl-top-actions">${opts.extraActions || ''}</div></div>
-    ${piece.desc ? `<p class="pl-note">💡 ${esc(piece.desc)}</p>` : ''}
+    ${piece.desc ? `<p class="pl-note">${icon('sparkle', 18)} ${esc(piece.desc)}</p>` : ''}
     <details class="card fs-how"><summary><b>Comment lire ?</b> (et le lien avec le piano)</summary>
       <ul>
         <li><b>Main gauche</b> : elle tient la <b>forme de l’accord</b> affiché à gauche (comme d’habitude). Pour certaines notes de mélodie, un doigt bouge un peu.</li>
@@ -74,14 +77,14 @@ export function mountFingerstyle(el, piece, opts = {}) {
     <div class="card pl-controls">
       <div class="row">
         <button class="btn primary big fs-play">▶ Jouer</button>
-        <button class="btn fs-restart" title="Recommencer">⏮</button>
+        <button class="icon-btn fs-restart" aria-label="Recommencer">${icon('restart', 22)}</button>
         <button class="btn fs-prev" hidden>◀</button><button class="btn primary fs-nextbtn" hidden>Note suivante ▶</button>
       </div>
       <div class="row"><span class="pl-label">Je travaille :</span>
         <span class="seg-toggle fs-parts">
-          <button class="btn sm on" data-part="both">🙌 Les deux</button>
-          <button class="btn sm" data-part="mel">☝️ Mélodie seule</button>
-          <button class="btn sm" data-part="acc">👍 Pouce seul</button>
+          <button class="btn sm on" data-part="both">Les deux</button>
+          <button class="btn sm" data-part="mel">Mélodie seule</button>
+          <button class="btn sm" data-part="acc">Pouce seul</button>
         </span></div>
       <div class="row">
         <label class="tempo">Vitesse <input type="range" class="fs-speed" min="0.3" max="1.2" step="0.05" value="1"> <b class="fs-speed-v"></b></label>
@@ -195,8 +198,10 @@ export function mountFingerstyle(el, piece, opts = {}) {
   function start(from = 0) {
     playing = true;
     offset = from;
-    q('.fs-play').textContent = '⏸ Pause';
+    q('.fs-play').innerHTML = `${icon('pause', 20)} Pause`;
     keepAwake(true);
+    timer.start();
+    store.setLast({ href: location.hash, title: piece.title, sub: 'Accords + mélodie' });
     const countIn = P.beatsPerBar;
     let loopStart = null;
     clock = new Clock({
@@ -256,6 +261,7 @@ export function mountFingerstyle(el, piece, opts = {}) {
     q('.pl-countin').hidden = true;
     q('.fs-play').textContent = '▶ Reprendre';
     keepAwake(false);
+    timer.stop();
   }
 
   // ------------------------------------------------ pas-à-pas

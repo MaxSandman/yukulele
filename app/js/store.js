@@ -14,6 +14,14 @@ const DEFAULTS = {
   songs: [], // chansons perso {id, source, created}
   arrangements: [], // morceaux niveau 2 perso (mélodies transcrites)
   favorites: [],
+  practice: {}, // 'AAAA-MM-JJ' -> secondes jouées
+  last: null, // dernier morceau joué {href, title, sub, kind}
+  sessions: {}, // 'AAAA-MM-JJ' -> étapes de la séance du jour terminées
+};
+
+export const today = (d = new Date()) => {
+  const z = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}`;
 };
 
 function load() {
@@ -70,6 +78,33 @@ export const store = {
   },
   isKnown(chord) {
     return state.known.includes(chord);
+  },
+  /** Ajoute du temps de pratique pour aujourd'hui. */
+  logPractice(seconds) {
+    if (!seconds || seconds < 1) return;
+    store.update((st) => {
+      st.practice ||= {};
+      const d = today();
+      st.practice[d] = Math.round((st.practice[d] || 0) + seconds);
+    });
+  },
+  /** Nombre de jours d'affilée avec de la pratique (aujourd'hui compris, ou jusqu'à hier). */
+  streak() {
+    const p = state.practice || {};
+    let n = 0;
+    const d = new Date();
+    if (!p[today(d)]) d.setDate(d.getDate() - 1);
+    while (p[today(d)]) {
+      n++;
+      d.setDate(d.getDate() - 1);
+    }
+    return n;
+  },
+  minutesToday() {
+    return Math.round(((state.practice || {})[today()] || 0) / 60);
+  },
+  setLast(item) {
+    store.update((st) => (st.last = { ...item, at: Date.now() }));
   },
   setKnown(chord, on) {
     store.update((st) => {

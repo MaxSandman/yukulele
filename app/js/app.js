@@ -14,30 +14,16 @@ import { mountTuner } from './tuner.js';
 import { PIECES } from './arrange.js';
 import { mountFingerstyle } from './fingerstyle.js';
 import { translatePage, trackPage, melodyPage } from './translate.js';
+import { allSongs, findSong, canPlay, songLevel, allPieces } from './library.js';
+import { homePage, learnPage, libraryPage, toolsPage } from './hubs.js';
+import { renderSessionBar } from './session.js';
+import { icon } from './icons.js';
 
 const main = $('#main');
 let cleanups = [];
 const onCleanup = (fn) => fn && cleanups.push(fn);
 
-// ------------------------------------------------------------ données chansons
-function allSongs() {
-  const custom = store.state.songs.map((s) => ({ ...s, custom: true }));
-  return [...BUILTIN_SONGS, ...custom].map((s) => {
-    const p = parseSong(s.source);
-    return { ...s, parsed: p, difficulty: songDifficulty(p.chords) };
-  });
-}
-const findSong = (id) => allSongs().find((s) => s.id === id);
-
-function canPlay(song) {
-  const known = new Set(store.state.known);
-  return song.parsed.chords.length > 0 && song.parsed.chords.every((c) => known.has(c));
-}
-
-function songLevel(song) {
-  const max = Math.max(0, ...song.parsed.chords.map((c) => chordStars(c)));
-  return Math.max(1, Math.min(4, max + (song.parsed.chords.length > 4 ? 1 : 0)));
-}
+// Données des morceaux : voir library.js
 
 // ------------------------------------------------------------ widgets des leçons
 const UKE_PARTS_SVG = `
@@ -68,7 +54,7 @@ function mountWidgets(root) {
     const [type, a, b] = el.dataset.w.split(':');
     if (type === 'chord') {
       el.innerHTML = `<div class="chord-widget">${chordDiagram(a, { size: 'lg', play: true })}
-        <button class="btn sm" data-listen="${esc(a)}">🔊 Écouter ${esc(pretty(a))}</button></div>`;
+        <button class="btn sm" data-listen="${esc(a)}">${icon('volume', 18)} Écouter ${esc(pretty(a))}</button></div>`;
       el.querySelector('[data-listen]').onclick = () => strum(voicingMidis(getVoicing(a)), 0, 'D', 0.4);
     } else if (type === 'fretboard') {
       el.classList.add('card');
@@ -90,7 +76,7 @@ function mountWidgets(root) {
         };
       }
     } else if (type === 'strings') {
-      el.innerHTML = `<div class="tn-refs">${STRINGS.map((s, i) => `<button class="btn ref ${STRING_CLASS[i]}" data-s="${i}">🔊 ${s.fr} (${s.name})</button>`).join('')}</div>`;
+      el.innerHTML = `<div class="tn-refs">${STRINGS.map((s, i) => `<button class="btn ref ${STRING_CLASS[i]}" data-s="${i}">${icon('volume', 18)} ${s.fr} (${s.name})</button>`).join('')}</div>`;
       el.querySelectorAll('button').forEach((bt) => (bt.onclick = () => playNote(STRINGS[+bt.dataset.s].midi, 0, 0.7)));
     } else if (type === 'strum') {
       el.classList.add('card');
@@ -106,50 +92,6 @@ function mountWidgets(root) {
 // ------------------------------------------------------------ pages
 const views = {};
 
-views.home = () => {
-  const done = LESSONS.filter((l) => store.state.lessons[l.id]).length;
-  const next = LESSONS.find((l) => !store.state.lessons[l.id]);
-  const playable = allSongs().filter(canPlay);
-  main.innerHTML = `
-  <section class="hero">
-    <div>
-      <h1>Apprendre le ukulélé 🌺</h1>
-      <p class="lead">Depuis zéro, sans solfège : des leçons courtes, un manche interactif, et des chansons qui défilent au bon rythme
-      pour savoir quoi jouer, et quand.</p>
-      ${next ? `<a class="btn primary big" href="#/lecons/${next.id}">${done ? '▶ Continuer' : '▶ Commencer'} : ${esc(next.title)}</a>` : '<a class="btn primary big" href="#/chansons">🎉 Parcours terminé : place aux chansons !</a>'}
-      <div class="progress"><div style="width:${(done / LESSONS.length) * 100}%"></div></div>
-      <div class="muted">${done} / ${LESSONS.length} leçons terminées</div>
-    </div>
-    <div class="hero-chord">${chordDiagram(next && next.learn ? next.learn[0] : 'C', { size: 'lg', play: true })}<div class="muted">Clique sur l’accord pour l’entendre</div></div>
-  </section>
-  <section class="grid tiles">
-    ${tile('#/lecons', '📚', 'Leçons', 'Le parcours pas à pas, depuis zéro.')}
-    ${tile('#/chansons', '🎤', 'Chansons', 'Joue avec le lecteur synchronisé.')}
-    ${tile('#/importer', '✍️', 'Ajouter une chanson', 'Colle les accords d’une chanson que tu aimes.')}
-    ${tile('#/accords', '🖐️', 'Accords', 'Tous les accords, doigtés et sons.')}
-    ${tile('#/manche', '🎸', 'Le manche', 'Explore les notes, case par case.')}
-    ${tile('#/rythme', '🥁', 'Rythmes', 'Les grattages avec métronome.')}
-    ${tile('#/melodies', '🎼', 'Mélodies', 'Joue note par note avec la tablature.')}
-    ${tile('#/niveau2', '🎶', 'Niveau 2 : accords + mélodie', 'Tetris, Satie, Joplin… le pouce accompagne, les doigts chantent.')}
-    ${tile('#/traduire', '🎧', 'Traduire un morceau', 'Donne un fichier audio : l’outil trouve les accords.')}
-    ${tile('#/entrainement', '🔁', 'Entraînement', 'Changements d’accords, quiz des notes.')}
-    ${tile('#/accordeur', '🎚️', 'Accordeur', 'Accorde ton ukulélé au micro ou à l’oreille.')}
-  </section>
-  ${playable.length ? `<section><h2>Chansons que tu peux déjà jouer</h2><div class="grid songs">${playable.slice(0, 6).map(songCard).join('')}</div></section>` : ''}`;
-  wireDiagrams(main);
-};
-const tile = (href, icon, title, txt) => `<a class="tile card" href="${href}"><span class="ti">${icon}</span><b>${title}</b><span class="muted">${txt}</span></a>`;
-
-views.lessons = () => {
-  main.innerHTML = `<h1>Leçons</h1><p class="lead">Suis-les dans l’ordre : chaque leçon prend 5 à 15 minutes. Tu peux les refaire autant que tu veux.</p>
-  <ol class="lesson-list">${LESSONS.map(
-    (l, i) => `<li><a class="card lesson-item ${store.state.lessons[l.id] ? 'done' : ''}" href="#/lecons/${l.id}">
-      <span class="li-num">${store.state.lessons[l.id] ? '✓' : i + 1}</span>
-      <span class="li-icon">${l.icon}</span>
-      <span class="li-txt"><b>${esc(l.title)}</b><span class="muted">${l.minutes} min${l.learn ? ' · accords : ' + l.learn.map(pretty).join(', ') : ''}</span></span></a></li>`
-  ).join('')}</ol>`;
-};
-
 views.lesson = (id) => {
   const i = LESSONS.findIndex((l) => l.id === id);
   const l = LESSONS[i];
@@ -157,8 +99,8 @@ views.lesson = (id) => {
   const prev = LESSONS[i - 1];
   const next = LESSONS[i + 1];
   main.innerHTML = `<article class="lesson">
-    <div class="crumbs"><a href="#/lecons">← Leçons</a> · Leçon ${i + 1} / ${LESSONS.length}</div>
-    <h1>${l.icon} ${esc(l.title)}</h1>
+    <div class="crumbs"><a href="#/apprendre">${icon('back', 16)} Parcours</a> · Leçon ${i + 1} sur ${LESSONS.length}</div>
+    <h1>${esc(l.title)}</h1>
     <div class="lesson-body">${l.body}</div>
     <div class="lesson-nav">
       ${prev ? `<a class="btn" href="#/lecons/${prev.id}">← ${esc(prev.title)}</a>` : '<span></span>'}
@@ -233,8 +175,8 @@ views.chord = (name) => {
   <h1>${esc(lab.main)} <span class="muted">${esc(lab.sub)}</span></h1>
   <div class="chord-detail">
     <div class="card">${chordDiagram(c.name, { size: 'xl', play: true })}
-      <button class="btn primary cd-play">🔊 Écouter</button>
-      <button class="btn cd-arp">🎵 Note par note</button>
+      <button class="btn primary cd-play">${icon('volume', 18)} Écouter</button>
+      <button class="btn cd-arp">${icon('note', 18)} Note par note</button>
       <label class="chk"><input type="checkbox" class="cd-known" ${store.isKnown(c.name) ? 'checked' : ''}> Je le connais</label>
     </div>
     <div class="card cd-info">
@@ -297,7 +239,7 @@ views.board = () => {
       <li>À la <b>case 12</b> (deux points), on retrouve la note de la corde à vide, une octave plus haut.</li>
       <li>Les petits points sur le manche (cases 5, 7, 10, 12) servent de repères pour ne pas se perder.</li>
     </ul>
-    <p><a class="btn" href="#/entrainement?mode=quiz">🎯 Quiz : trouve la note sur le manche</a></p>
+    <p><a class="btn" href="#/entrainement?mode=quiz">${icon('target', 18)} Quiz : trouve la note sur le manche</a></p>
   </div>`;
   const fb = new Fretboard($('.b-board'), { frets: 12, showNotes: true });
   $('.b-notes').onchange = (e) => {
@@ -354,67 +296,39 @@ views.rhythm = () => {
 };
 
 // ---- Chansons
-function songCard(s) {
-  const p = s.parsed;
-  return `<div class="card song-card">
-    <a href="#/chansons/${encodeURIComponent(s.id)}" class="sc-main">
-      <b>${esc(p.title || 'Sans titre')}</b><span class="muted">${esc(p.artist || '')}</span>
-      <span class="sc-chords">${p.chords.map((c) => `<span class="chip ${store.isKnown(c) ? 'known' : ''}">${esc(pretty(c))}</span>`).join('')}</span>
-    </a>
-    <div class="sc-foot">${starsHtml(songLevel(s))} ${s.custom ? '<span class="badge">perso</span>' : ''}
-      <a class="btn sm primary" href="#/chansons/${encodeURIComponent(s.id)}">▶ Jouer</a></div>
-  </div>`;
-}
-
-views.songs = (params) => {
-  const f = params.get('f') || 'all';
-  main.innerHTML = `<h1>Chansons</h1>
-  <p class="lead">Choisis une chanson : le lecteur t’affiche l’accord à jouer, le suivant, le rythme et les paroles, au bon tempo.
-  Les accords <span class="chip known">en vert</span> sont ceux que tu connais déjà.</p>
-  <div class="toolbar">
-    <div class="seg-toggle">
-      <a class="btn sm ${f === 'all' ? 'on' : ''}" href="#/chansons">Toutes</a>
-      <a class="btn sm ${f === 'ok' ? 'on' : ''}" href="#/chansons?f=ok">Je peux les jouer</a>
-      <a class="btn sm ${f === 'mine' ? 'on' : ''}" href="#/chansons?f=mine">Mes chansons</a>
-    </div>
-    <input type="search" class="s-search" placeholder="Rechercher…" aria-label="Rechercher une chanson">
-    <a class="btn primary" href="#/importer">＋ Ajouter une chanson</a>
-  </div>
-  <div class="grid songs"></div>`;
-  let list = allSongs();
-  if (f === 'ok') list = list.filter(canPlay);
-  if (f === 'mine') list = list.filter((s) => s.custom);
-  list.sort((a, b) => songLevel(a) - songLevel(b) || a.difficulty - b.difficulty);
-  const grid = $('.songs');
-  const draw = (term = '') => {
-    const t = term.toLowerCase();
-    const l = list.filter((s) => !t || (s.parsed.title + ' ' + s.parsed.artist).toLowerCase().includes(t));
-    grid.innerHTML = l.length
-      ? l.map(songCard).join('')
-      : `<p class="muted">${f === 'ok' ? 'Termine les premières leçons (ou coche les accords que tu connais) pour voir les chansons que tu peux jouer.' : f === 'mine' ? 'Tu n’as pas encore ajouté de chanson. Clique sur « Ajouter une chanson » !' : 'Aucune chanson trouvée.'}</p>`;
-  };
-  draw();
-  $('.s-search').oninput = (e) => draw(e.target.value);
-};
-
 views.play = (id) => {
   id = decodeURIComponent(id);
   const s = findSong(id);
   if (!s) return views.notFound();
-  main.innerHTML = `<div class="crumbs"><a href="#/chansons">← Chansons</a></div><div class="pl-host"></div>`;
-  const extra = s.custom
-    ? `<a class="btn sm" href="#/importer?edit=${encodeURIComponent(s.id)}">✏️ Modifier</a> <button class="btn sm danger pl-del">🗑 Supprimer</button>`
-    : `<a class="btn sm" href="#/importer?copy=${encodeURIComponent(s.id)}">✏️ Copier et modifier</a>`;
-  onCleanup(mountPlayer($('.pl-host'), s.source, { extraActions: extra }));
-  const del = $('.pl-del');
-  if (del)
-    del.onclick = () => {
-      if (!confirm(`Supprimer « ${s.parsed.title} » de ton carnet ?`)) return;
-      store.update((st) => (st.songs = st.songs.filter((x) => x.id !== s.id)));
-      toast('Chanson supprimée');
-      location.hash = '#/chansons?f=mine';
-    };
+  main.innerHTML = `<div class="pl-host"></div>`;
+  const actions = s.custom
+    ? [
+        { label: 'Modifier la chanson', icon: 'edit', href: `#/importer?edit=${encodeURIComponent(s.id)}` },
+        {
+          label: 'Supprimer',
+          icon: 'trash',
+          danger: true,
+          onClick: () => {
+            if (!confirm(`Supprimer « ${s.parsed.title} » de tes morceaux ?`)) return;
+            store.update((st) => (st.songs = st.songs.filter((x) => x.id !== s.id)));
+            toast('Chanson supprimée');
+            location.hash = '#/morceaux?f=mes';
+          },
+        },
+      ]
+    : [{ label: 'Copier et modifier', icon: 'copy', href: `#/importer?copy=${encodeURIComponent(s.id)}` }];
+  onCleanup(mountPlayer($('.pl-host'), s.source, { backHref: '#/morceaux', actions }));
 };
+
+/** En-tête « scène » commun aux lecteurs de mélodie et de niveau 2. */
+function sceneShell(title, sub, back) {
+  return `<div class="scene legacy">
+    <header class="sc-head">
+      <a class="icon-btn dark" href="${back}" aria-label="Retour">${icon('back')}</a>
+      <div class="sc-title"><h1>${esc(title)}</h1><span class="sc-sub">${esc(sub || '')}</span></div>
+    </header>
+    <div class="scene-host"></div></div>`;
+}
 
 // ---- Import / traduction
 const IMPORT_EXAMPLE = `Colle ici les paroles avec les accords, par exemple :
@@ -509,13 +423,13 @@ views.import = (params) => {
     pv.innerHTML = `
       <h3>Accords trouvés (${song.chords.length})</h3>
       ${song.chords.length ? `<div class="row wrap">${song.chords.map((c) => `<div class="pv-chord">${chordDiagram(c, { size: 'sm', play: true })}${starsHtml(chordStars(c))}</div>`).join('')}</div>` : '<p class="warn">Aucun accord reconnu. Vérifie que les accords sont bien sur leur propre ligne au-dessus des paroles, ou entre crochets [C].</p>'}
-      ${song.unknown.length ? `<p class="warn">⚠️ Non reconnus (ignorés) : ${song.unknown.map((u) => `<code>${esc(u)}</code>`).join(' ')}</p>` : ''}
+      ${song.unknown.length ? `<p class="warn">${icon('alert', 18)} Non reconnus (ignorés) : ${song.unknown.map((u) => `<code>${esc(u)}</code>`).join(' ')}</p>` : ''}
       <div class="row wrap pv-tools">
         <span class="transpose">Transposer <button class="btn sm im-tdown">−</button> <b>${transpose > 0 ? '+' + transpose : transpose}</b> <button class="btn sm im-tup">+</button></span>
-        ${easy.t !== transpose && easy.t !== 0 ? `<button class="btn sm primary im-easy">✨ Rendre plus facile (${easy.t > 0 ? '+' : ''}${easy.t} : ${easy.chords.map(pretty).join(', ')})</button>` : ''}
+        ${easy.t !== transpose && easy.t !== 0 ? `<button class="btn sm primary im-easy">${icon('sparkle', 18)} Rendre plus facile (${easy.t > 0 ? '+' : ''}${easy.t} : ${easy.chords.map(pretty).join(', ')})</button>` : ''}
         <label class="chk"><input type="checkbox" class="im-simplify" ${simplify ? 'checked' : ''}> Simplifier les accords compliqués (Cmaj7 → C…)</label>
       </div>
-      ${hard.length ? `<p class="muted">💡 Accords plus difficiles : ${hard.map(pretty).join(', ')}. ${easy.t && easy.t !== transpose ? 'Essaie « Rendre plus facile » : la chanson sera plus aiguë ou plus grave, mais avec des accords plus simples.' : ''}</p>` : ''}
+      ${hard.length ? `<p class="muted">${icon('sparkle', 18)} Accords plus difficiles : ${hard.map(pretty).join(', ')}. ${easy.t && easy.t !== transpose ? 'Essaie « Rendre plus facile » : la chanson sera plus aiguë ou plus grave, mais avec des accords plus simples.' : ''}</p>` : ''}
       <h3>Aperçu</h3>
       <div class="pv-lyrics">${song.sections
         .map(
@@ -526,7 +440,7 @@ views.import = (params) => {
         )
         .join('')}</div>
       <div class="row pv-actions">
-        <button class="btn primary big im-save" ${song.chords.length ? '' : 'disabled'}>💾 Enregistrer dans mon carnet</button>
+        <button class="btn primary big im-save" ${song.chords.length ? '' : 'disabled'}>${icon('check', 18)} Enregistrer dans mes morceaux</button>
         <button class="btn im-try" ${song.chords.length ? '' : 'disabled'}>▶ Essayer sans enregistrer</button>
       </div>`;
     wireDiagrams(pv);
@@ -543,7 +457,7 @@ views.import = (params) => {
         if (i >= 0) st.songs[i] = entry;
         else st.songs.push(entry);
       });
-      toast('Chanson enregistrée dans ton carnet 🎉');
+      toast('Chanson enregistrée dans tes morceaux');
       location.hash = `#/chansons/${id}`;
     };
     pv.querySelector('.im-try').onclick = () => {
@@ -567,21 +481,11 @@ views.import = (params) => {
   preview();
 };
 
-// ---- Mélodies
-views.melodies = () => {
-  main.innerHTML = `<h1>Mélodies</h1>
-  <p class="lead">Joue un air note par note grâce à la tablature animée. Le manche te montre où poser ton doigt pour la note actuelle
-  (et en transparence, la suivante).</p>
-  <div class="grid songs">${MELODIES.map(
-    (m) => `<a class="card song-card" href="#/melodies/${m.id}"><div class="sc-main"><b>${esc(m.title)}</b><span class="muted">${esc(m.desc)}</span></div>
-    <div class="sc-foot">${starsHtml(m.level, 3)} <span class="btn sm primary">▶ Jouer</span></div></a>`
-  ).join('')}</div>`;
-};
 views.melody = (id) => {
   const m = MELODIES.find((x) => x.id === id);
   if (!m) return views.notFound();
-  main.innerHTML = `<div class="crumbs"><a href="#/melodies">← Mélodies</a></div><div class="mel-host"></div>`;
-  onCleanup(mountMelody($('.mel-host'), m));
+  main.innerHTML = sceneShell(m.title, m.desc, '#/morceaux?f=melodie');
+  onCleanup(mountMelody($('.scene-host'), m));
 };
 
 // ---- Accordeur
@@ -596,8 +500,8 @@ views.tuner = () => {
 views.practice = (params) => {
   const mode = params.get('mode') || 'drill';
   main.innerHTML = `<h1>Entraînement</h1>
-  <div class="seg-toggle"><a class="btn ${mode === 'drill' ? 'on' : ''}" href="#/entrainement">🔁 Changements d’accords</a>
-  <a class="btn ${mode === 'quiz' ? 'on' : ''}" href="#/entrainement?mode=quiz">🎯 Quiz des notes</a></div>
+  <div class="seg-toggle"><a class="btn ${mode === 'drill' ? 'on' : ''}" href="#/entrainement">${icon('repeat', 18)} Changements d’accords</a>
+  <a class="btn ${mode === 'quiz' ? 'on' : ''}" href="#/entrainement?mode=quiz">${icon('target', 18)} Quiz des notes</a></div>
   <div class="pr-host"></div>`;
   if (mode === 'quiz') return quiz($('.pr-host'));
   drill($('.pr-host'), params);
@@ -647,7 +551,7 @@ function drill(host, params) {
     for (let i = 0; i < seq.length; i += 4) lines.push(seq.slice(i, i + 4).map((c) => `[${c}:${beats}]${pretty(c)}   `).join(''));
     const src = `{title: Exercice ${list.map(pretty).join(' → ')}}\n{tempo: ${+host.querySelector('.dr-bpm').value || 60}}\n{time: 4/4}\n{strum: ${beats >= 8 ? 'd2' : 'd4'}}\n${lines.join('\n')}`;
     cleanup && cleanup();
-    cleanup = mountPlayer(host.querySelector('.dr-player'), src, {});
+    cleanup = mountPlayer(host.querySelector('.dr-player'), src, { embedded: true, preset: 'concert', speed: 1, metro: true });
     host.querySelector('.dr-player').scrollIntoView({ behavior: 'smooth' });
   };
   host.querySelector('.dr-go').onclick = go;
@@ -665,7 +569,7 @@ function quiz(host) {
     <div class="qz-head"><div class="qz-target"></div><div class="qz-score"></div></div>
     <div class="qz-board"></div>
     <div class="qz-msg muted"></div>
-    <div class="row"><button class="btn qz-skip">Passer / montrer la réponse</button> <button class="btn qz-hear">🔊 Écouter la note</button></div>
+    <div class="row"><button class="btn qz-skip">Passer / montrer la réponse</button> <button class="btn qz-hear">${icon('volume', 18)} Écouter la note</button></div>
   </div>`;
   const fb = new Fretboard(host.querySelector('.qz-board'), { frets: 5 });
   const PCS = [0, 2, 4, 5, 7, 9, 11];
@@ -675,7 +579,7 @@ function quiz(host) {
     while (target && pc === target.pc);
     target = { pc };
     host.querySelector('.qz-target').innerHTML = `Trouve un <b>${frenchOf(SHARP[pc])}</b> <span class="muted">(${SHARP[pc]})</span>`;
-    host.querySelector('.qz-score').textContent = `Score : ${score} / ${total} · Série : ${streak} 🔥`;
+    host.querySelector('.qz-score').textContent = `Score : ${score} / ${total} · Série : ${streak}`;
     fb.setMarkers([]);
   };
   const reveal = (cls = 'tone') => {
@@ -689,12 +593,12 @@ function quiz(host) {
     if (mod12(midi) === target.pc) {
       score++;
       streak++;
-      msg.innerHTML = `✅ Oui ! Corde ${STRINGS[string].fr}, ${fret ? 'case ' + fret : 'à vide'}. ${streak >= 3 ? 'Super série !' : ''}`;
+      msg.innerHTML = `${icon('check', 18)} Oui ! Corde ${STRINGS[string].fr}, ${fret ? 'case ' + fret : 'à vide'}. ${streak >= 3 ? 'Super série !' : ''}`;
       reveal('root');
       setTimeout(newQ, 1300);
     } else {
       streak = 0;
-      msg.innerHTML = `❌ Ça, c’est un <b>${esc(midiInfo(midi).fr)}</b>. Essaie encore !`;
+      msg.innerHTML = `${icon('close', 18)} Ça, c’est un <b>${esc(midiInfo(midi).fr)}</b>. Essaie encore !`;
       host.querySelector('.qz-score').textContent = `Score : ${score} / ${total} · Série : ${streak}`;
     }
   };
@@ -777,37 +681,12 @@ views.settings = () => {
 };
 
 // ---- Niveau 2 : accords + mélodie
-const allPieces = () => [...PIECES, ...(store.state.arrangements || []).map((p) => ({ ...p, custom: true }))];
-views.level2 = () => {
-  main.innerHTML = `<h1>Niveau 2 : accords + mélodie</h1>
-  <p class="lead">Comme au piano avec deux mains : au ukulélé, le <b>pouce</b> joue l’accompagnement (ta « main gauche » de pianiste)
-  et l’<b>index / majeur</b> jouent la mélodie (ta « main droite »), pendant que la main gauche tient la forme de l’accord.
-  Tout est en couleurs, sans solfège. Commence par la leçon :</p>
-  <p><a class="btn" href="#/lecons/niveau2">📚 Leçon : jouer accords + mélodie</a> <a class="btn" href="#/traduire/melodie">🎹 Transcrire ta propre mélodie</a></p>
-  <div class="grid songs">${allPieces()
-    .map(
-      (p) => `<div class="card song-card"><a class="sc-main" href="#/niveau2/${encodeURIComponent(p.id)}"><b>${esc(p.title)}</b>
-      <span class="muted">${esc(p.composer || '')}</span><span>${esc(p.desc || '')}</span>
-      <span class="sc-chords">${[...new Set((p.chords || '').replace(/[|,]/g, ' ').split(/\s+/).filter((c) => parseChord(c)))].map((c) => `<span class="chip ${store.isKnown(c) ? 'known' : ''}">${esc(pretty(c))}</span>`).join('')}</span></a>
-      <div class="sc-foot">${starsHtml(p.level || 2, 3)} ${p.custom ? `<span class="badge">perso</span> <button class="btn sm danger" data-del="${esc(p.id)}">🗑</button>` : ''}
-      <a class="btn sm primary" href="#/niveau2/${encodeURIComponent(p.id)}">▶ Jouer</a></div></div>`
-    )
-    .join('')}</div>`;
-  main.querySelectorAll('[data-del]').forEach(
-    (b) =>
-      (b.onclick = () => {
-        if (!confirm('Supprimer ce morceau ?')) return;
-        store.update((st) => (st.arrangements = st.arrangements.filter((a) => a.id !== b.dataset.del)));
-        views.level2();
-      })
-  );
-};
 views.piece = (id) => {
   id = decodeURIComponent(id);
   const p = allPieces().find((x) => x.id === id);
   if (!p) return views.notFound();
-  main.innerHTML = `<div class="crumbs"><a href="#/niveau2">← Niveau 2</a></div><div class="fs-host"></div>`;
-  onCleanup(mountFingerstyle($('.fs-host'), p));
+  main.innerHTML = sceneShell(p.title, p.composer, '#/morceaux?f=duo');
+  onCleanup(mountFingerstyle($('.scene-host'), p));
   wireDiagrams(main);
 };
 
@@ -821,25 +700,29 @@ views.notFound = () => {
 
 // ------------------------------------------------------------ routeur
 const ROUTES = [
-  [/^\/?$/, views.home, 'home'],
-  [/^\/lecons$/, views.lessons, 'lecons'],
-  [/^\/lecons\/([\w-]+)$/, views.lesson, 'lecons'],
-  [/^\/accords$/, views.chords, 'accords'],
-  [/^\/accords\/(.+)$/, views.chord, 'accords'],
-  [/^\/manche$/, views.board, 'manche'],
-  [/^\/rythme$/, views.rhythm, 'rythme'],
-  [/^\/chansons$/, views.songs, 'chansons'],
-  [/^\/chansons\/(.+)$/, views.play, 'chansons'],
-  [/^\/importer$/, views.import, 'chansons'],
-  [/^\/melodies$/, views.melodies, 'melodies'],
-  [/^\/melodies\/([\w-]+)$/, views.melody, 'melodies'],
-  [/^\/accordeur$/, views.tuner, 'accordeur'],
-  [/^\/entrainement$/, views.practice, 'entrainement'],
+  [/^\/?$/, (p) => homePage(main, p), 'home'],
+  [/^\/apprendre$/, () => learnPage(main), 'apprendre'],
+  [/^\/lecons$/, () => learnPage(main), 'apprendre'],
+  [/^\/lecons\/([\w-]+)$/, views.lesson, 'apprendre'],
+  [/^\/entrainement$/, views.practice, 'apprendre'],
+  [/^\/morceaux$/, (p) => libraryPage(main, p), 'morceaux'],
+  [/^\/chansons$/, (p) => libraryPage(main, p), 'morceaux'],
+  [/^\/melodies$/, () => libraryPage(main, new URLSearchParams('f=melodie')), 'morceaux'],
+  [/^\/niveau2$/, () => libraryPage(main, new URLSearchParams('f=duo')), 'morceaux'],
+  [/^\/chansons\/(.+)$/, views.play, 'morceaux', true],
+  [/^\/melodies\/([\w-]+)$/, views.melody, 'morceaux', true],
+  [/^\/niveau2\/(.+)$/, views.piece, 'morceaux', true],
+  [/^\/importer$/, views.import, 'morceaux'],
+  [/^\/traduire$/, views.translate, 'morceaux'],
+  [/^\/traduire\/melodie$/, () => melodyPage(main, onCleanup), 'morceaux'],
+  [/^\/traduire\/([\w-]+)$/, views.track, 'morceaux', true],
+  [/^\/outils$/, () => toolsPage(main), 'outils'],
+  [/^\/accords$/, views.chords, 'outils'],
+  [/^\/accords\/(.+)$/, views.chord, 'outils'],
+  [/^\/manche$/, views.board, 'outils'],
+  [/^\/rythme$/, views.rhythm, 'outils'],
+  [/^\/accordeur$/, views.tuner, 'outils'],
   [/^\/reglages$/, views.settings, 'reglages'],
-  [/^\/niveau2$/, views.level2, 'niveau2'],
-  [/^\/niveau2\/(.+)$/, views.piece, 'niveau2'],
-  [/^\/traduire$/, views.translate, 'traduire'],
-  [/^\/traduire\/([\w-]+)$/, views.track, 'traduire'],
 ];
 
 function route() {
@@ -854,23 +737,30 @@ function route() {
   const hash = location.hash.replace(/^#/, '') || '/';
   const [path, qs] = hash.split('?');
   const params = new URLSearchParams(qs || '');
-  for (const [re, view, nav] of ROUTES) {
+  for (const [re, view, nav, scene] of ROUTES) {
     const m = re.exec(path);
     if (m) {
+      document.body.classList.toggle('scene-mode', !!scene);
       try {
         if (m[1] !== undefined) view(m[1], params);
         else view(params);
       } catch (e) {
         console.error(e);
-        main.innerHTML = `<h1>Oups…</h1><p>Une erreur est survenue : ${esc(e.message)}</p><p><a href="#/">← Accueil</a></p>`;
+        main.innerHTML = `<div class="page"><h1>Oups…</h1><p>Une erreur est survenue : ${esc(e.message)}</p><p><a href="#/">Retour à l’accueil</a></p></div>`;
       }
-      $$('.nav a').forEach((a) => a.classList.toggle('active', a.dataset.nav === nav));
-      document.body.classList.remove('nav-open');
+      $$('.tabbar a').forEach((a) => {
+        const on = a.dataset.nav === nav;
+        a.classList.toggle('active', on);
+        if (on) a.setAttribute('aria-current', 'page');
+        else a.removeAttribute('aria-current');
+      });
+      renderSessionBar();
       window.scrollTo(0, 0);
       main.focus({ preventScroll: true });
       return;
     }
   }
+  document.body.classList.remove('scene-mode');
   views.notFound();
 }
 
@@ -883,7 +773,6 @@ function applyTheme() {
 applyTheme();
 setVolume(store.settings.volume);
 window.addEventListener('hashchange', route);
-$('.nav-toggle').onclick = () => document.body.classList.toggle('nav-open');
 route();
 
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {

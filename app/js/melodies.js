@@ -1,8 +1,10 @@
 // Mélodies note par note (tablature animée) avec mode « j'attends que tu joues la note » au micro.
 import { Clock, click, playNote, keepAwake, startPitchListener, micAvailable } from './audio.js';
+import { icon } from './icons.js';
 import { STRING_INDEX, STRINGS, noteAt, freqToMidi } from './theory.js';
 import { esc, Fretboard, noteName, STRING_CLASS } from './ui.js';
 import { store } from './store.js';
+import { practiceTimer } from './session.js';
 
 // Format : "corde+case:durée(en temps):syllabe"  — ex. "C0:1:Frè". R = silence.
 export const MELODIES = [
@@ -113,6 +115,7 @@ export function mountMelody(el, melody) {
   let idx = 0;
   let stopMic = null;
   let stable = 0;
+  const timer = practiceTimer();
 
   el.classList.add('melody');
   el.innerHTML = `
@@ -129,10 +132,10 @@ export function mountMelody(el, melody) {
     <div class="card pl-controls">
       <div class="row">
         <button class="btn primary big mel-play">▶ Jouer</button>
-        <button class="btn mel-restart">⏮</button>
+        <button class="icon-btn mel-restart" aria-label="Recommencer">${icon('restart', 22)}</button>
         <span class="seg-toggle">
-          <button class="btn sm mel-mode on" data-mode="play">⏱ Au tempo</button>
-          <button class="btn sm mel-mode" data-mode="wait">🎤 J’attends ta note</button>
+          <button class="btn sm mel-mode on" data-mode="play">Au tempo</button>
+          <button class="btn sm mel-mode" data-mode="wait">${icon('mic', 18)} J’attends ta note</button>
         </span>
       </div>
       <div class="row mel-play-opts">
@@ -143,7 +146,7 @@ export function mountMelody(el, melody) {
       <div class="row mel-wait-opts" hidden>
         <span class="mel-mic-status muted"></span>
         <button class="btn sm mel-skip">J’ai joué la note ✓</button>
-        <button class="btn sm mel-hint">🔊 Écouter la note</button>
+        <button class="btn sm mel-hint">${icon('volume', 18)} Écouter la note</button>
       </div>
     </div>`;
   const q = (s) => el.querySelector(s);
@@ -187,7 +190,7 @@ export function mountMelody(el, melody) {
     el.querySelectorAll('.tab-note.now, .tab-syl.now').forEach((n) => n.classList.remove('now'));
     const n = mel.list[k];
     if (!n) {
-      q('.mel-big').innerHTML = '<div class="pl-end">🎉 Bravo !</div>';
+      q('.mel-big').innerHTML = '<div class="pl-end">Bravo !</div>';
       board.setMarkers([]);
       return;
     }
@@ -214,8 +217,10 @@ export function mountMelody(el, melody) {
   // ---- mode tempo
   function start(from = 0) {
     playing = true;
-    q('.mel-play').textContent = '⏸ Pause';
+    q('.mel-play').innerHTML = `${icon('pause', 20)} Pause`;
     keepAwake(true);
+    timer.start();
+    store.setLast({ href: location.hash, title: mel.title, sub: 'Mélodie' });
     const countIn = mel.beatsPerBar;
     let nextNote = noteIndexAt(from);
     if (mel.list[nextNote] && mel.list[nextNote].start < from) nextNote++;
@@ -267,13 +272,14 @@ export function mountMelody(el, melody) {
     cancelAnimationFrame(raf);
     q('.mel-play').textContent = '▶ Reprendre';
     keepAwake(false);
+    timer.stop();
   }
 
   // ---- mode attente (micro)
   async function startWait() {
     const status = q('.mel-mic-status');
     if (!micAvailable()) {
-      status.innerHTML = '⚠️ Micro indisponible (il faut une adresse <b>https</b>). Utilise le bouton « J’ai joué la note ✓ » pour avancer.';
+      status.innerHTML = 'Micro indisponible (il faut une adresse <b>https</b>). Utilise le bouton « J’ai joué la note ✓ » pour avancer.';
       return;
     }
     try {
@@ -290,7 +296,7 @@ export function mountMelody(el, melody) {
         if (Math.abs(m - n.midi) < 0.5) {
           stable++;
           if (stable >= 3) {
-            status.innerHTML = '✅ <b>Bravo !</b>';
+            status.innerHTML = `${icon('check', 18)} <b>Bravo !</b>`;
             advance();
           }
         } else {
@@ -299,7 +305,7 @@ export function mountMelody(el, melody) {
         }
       });
     } catch {
-      status.textContent = '⚠️ Accès au micro refusé. Utilise le bouton « J’ai joué la note ✓ ».';
+      status.textContent = 'Accès au micro refusé. Utilise le bouton « J’ai joué la note ✓ ».';
     }
   }
   function advance() {

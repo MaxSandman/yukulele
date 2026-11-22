@@ -8,6 +8,8 @@ import { esc, chordDiagram, chordLabel, toast, wireDiagrams } from './ui.js';
 import { serializeMelody, midiToNote } from './arrange.js';
 import { mountFingerstyle } from './fingerstyle.js';
 import { store } from './store.js';
+import { icon } from './icons.js';
+import { practiceTimer } from './session.js';
 
 const fmtTime = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 
@@ -18,9 +20,9 @@ export function translatePage(main, onCleanup) {
   <b>par-dessus le vrai morceau</b> avec les accords qui défilent. Tout se passe sur cet appareil : le fichier n’est envoyé nulle part.</p>
   <div class="tr-grid">
     <div class="card">
-      <h2>🎧 Les accords d’un morceau</h2>
+      <h2>Les accords d’un morceau</h2>
       <p>Choisis un fichier audio (mp3, m4a, wav…) d’une chanson que tu aimes.</p>
-      <label class="btn primary big">📂 Choisir un fichier <input type="file" accept="audio/*,.mp3,.m4a,.wav,.ogg,.flac,.aac" class="tr-file" hidden></label>
+      <label class="btn primary big">${icon('wave', 20)} Choisir un fichier <input type="file" accept="audio/*,.mp3,.m4a,.wav,.ogg,.flac,.aac" class="tr-file" hidden></label>
       <div class="tr-progress" hidden><div class="progress"><div></div></div><span class="muted tr-msg"></span></div>
       <details class="help"><summary>Bon à savoir</summary>
         <ul>
@@ -33,11 +35,11 @@ export function translatePage(main, onCleanup) {
         </ul></details>
     </div>
     <div class="card">
-      <h2>🎹 Transcrire une mélodie</h2>
+      <h2>Transcrire une mélodie</h2>
       <p>La mélodie d’une chanson complète est trop mélangée aux autres instruments pour être extraite seule.
       Mais toi, tu peux la <b>jouer au piano</b> (main droite seule), la <b>chanter</b> ou la siffler :
       l’outil la transforme en tablature ukulélé, et tu peux y ajouter les accords pour une version <b>niveau 2</b>.</p>
-      <a class="btn primary big" href="#/traduire/melodie">🎹 Transcrire une mélodie</a>
+      <a class="btn primary big" href="#/traduire/melodie">${icon('mic', 20)} Transcrire une mélodie</a>
     </div>
   </div>
   <h2>Mes morceaux traduits</h2>
@@ -58,7 +60,7 @@ export function translatePage(main, onCleanup) {
             (t) => `<div class="card song-card"><a class="sc-main" href="#/traduire/${t.id}"><b>${esc(t.name)}</b>
             <span class="muted">${fmtTime(t.result.duration)} · ${t.result.bpm} BPM · tonalité ${esc(pretty(t.result.key || '?'))}</span>
             <span class="sc-chords">${[...new Set(t.result.segments.map((s) => s.chord).filter((c) => c !== 'N'))].slice(0, 8).map((c) => `<span class="chip">${esc(pretty(c))}</span>`).join('')}</span></a>
-            <div class="sc-foot"><button class="btn sm danger" data-del="${t.id}">🗑</button><a class="btn sm primary" href="#/traduire/${t.id}">▶ Jouer avec</a></div></div>`
+            <div class="sc-foot"><button class="btn sm danger" data-del="${t.id}" aria-label="Supprimer">${icon('trash', 18)}</button><a class="btn sm primary" href="#/traduire/${t.id}">${icon('play', 18)} Jouer avec</a></div></div>`
           )
           .join('')
       : '<p class="muted">Aucun morceau pour l’instant.</p>';
@@ -92,7 +94,7 @@ export function translatePage(main, onCleanup) {
       if (truncated) toast('Seules les 10 premières minutes ont été analysées');
       location.hash = `#/traduire/${id}`;
     } catch (err) {
-      set(0, `⚠️ Impossible d’analyser ce fichier (${err.message}). Essaie un mp3 ou un wav.`);
+      set(0, `Impossible d’analyser ce fichier (${err.message}). Essaie un mp3 ou un wav.`);
     }
   };
 }
@@ -124,42 +126,44 @@ export async function trackPage(main, id, onCleanup) {
   let raf = 0;
   let cur = -2;
   let loop = null;
+  const timer = practiceTimer();
   const PXS = 46; // pixels par seconde dans la frise
   const shape = (c) => (c === 'N' ? 'N' : transposeChord(c, -capo));
 
-  main.innerHTML = `<div class="crumbs"><a href="#/traduire">← Traduire un morceau</a></div>
-  <div class="pl-top"><div><h1 class="pl-title">${esc(t.name)}</h1>
-    <div class="muted">${R.bpm} BPM · tonalité détectée : ${esc(pretty(R.key || '?'))} · ${fmtTime(R.duration)}</div></div>
-    <div class="pl-top-actions"><button class="btn sm tk-export">📒 Ajouter au carnet de chansons</button></div></div>
-  <div class="card tk-capo"></div>
-  <div class="pl-stage">
-    <div class="pl-now card"><div class="pl-label">Maintenant</div><div class="pl-now-diagram"></div><div class="pl-now-name"></div></div>
-    <div class="pl-next card"><div class="pl-label">Ensuite</div><div class="pl-next-diagram"></div><div class="pl-next-when"></div></div>
-    <div class="pl-beat card"><div class="pl-label">Temps</div><div class="pl-beats"></div>
-      <div class="pl-label" style="margin-top:1rem">Accords du morceau <span class="muted">(clique pour écouter)</span></div><div class="pl-chord-list"></div></div>
+  main.innerHTML = `<div class="scene track">
+  <header class="sc-head">
+    <a class="icon-btn dark" href="#/morceaux?f=mes" aria-label="Retour">${icon('back')}</a>
+    <div class="sc-title"><h1>${esc(t.name)}</h1>
+      <span class="sc-sub">${R.bpm} BPM · tonalité détectée : ${esc(pretty(R.key || '?'))} · ${fmtTime(R.duration)}</span></div>
+    <button class="pill dark tk-export">${icon('list', 18)} Ajouter à mes chansons</button>
+  </header>
+  <div class="tk-capo sc-band"></div>
+  <div class="sc-stage">
+    <section class="sc-now" aria-label="Accord à jouer maintenant"><div class="pl-now-diagram sc-now-dia"></div>
+      <div class="sc-now-txt"><span class="sc-label ink">Maintenant</span><div class="pl-now-name"></div></div></section>
+    <section class="sc-next pl-next" aria-label="Accord suivant"><span class="sc-label">Ensuite</span><div class="pl-next-diagram sc-next-dia"></div><div class="pl-next-when sc-next-when"></div></section>
+    <section class="sc-rhythm" aria-label="Temps"><span class="sc-label">Compte avec moi</span><div class="pl-beats sc-beats"></div>
+      <div class="tk-chords"><span class="sc-label">Accords du morceau</span><div class="pl-chord-list"></div></div></section>
   </div>
-  <div class="card"><div class="tk-strip-wrap"><div class="mel-playhead"></div><div class="tk-strip"></div></div>
-    <p class="muted tk-hint">Clique sur un accord de la frise pour y aller. Un accord semble faux ? Clique sur ✏️ pour le corriger.</p>
-    <div class="tk-edit" hidden></div></div>
-  <div class="card pl-controls">
-    <div class="row">
-      <button class="btn primary big tk-play">▶ Jouer</button>
-      <button class="btn tk-back" title="Reculer de 5 s">⏪ 5 s</button>
-      <button class="btn tk-fwd" title="Avancer de 5 s">5 s ⏩</button>
-      <span class="tk-time muted"></span>
-    </div>
-    <div class="row">
-      <label class="tempo">Vitesse <input type="range" class="tk-speed" min="0.5" max="1" step="0.05" value="1"> <b class="tk-speed-v">100 %</b></label>
-      <label class="chk"><input type="checkbox" class="tk-loop"> Boucler le passage en cours (2 mesures)</label>
-    </div>
+  <section class="sc-panel"><div class="tk-strip-wrap"><div class="mel-playhead"></div><div class="tk-strip"></div></div>
+    <p class="tk-hint">Touche un accord de la frise pour y aller. Un accord semble faux ? Touche le crayon pour le corriger.</p>
+    <div class="tk-edit" hidden></div></section>
+  <footer class="sc-bar">
+    <button class="icon-btn dark lg tk-back" aria-label="Reculer de 5 secondes">${icon('restart')}</button>
+    <button class="play-btn tk-play" aria-label="Jouer">${icon('play', 32)}</button>
+    <button class="icon-btn dark lg tk-fwd" aria-label="Avancer de 5 secondes">${icon('next')}</button>
+    <span class="tk-time"></span>
+    <label class="pill dark">${icon('speed', 20)} Vitesse <input type="range" class="tk-speed" min="0.5" max="1" step="0.05" value="1"> <b class="tk-speed-v">100 %</b></label>
+    <label class="pill dark">${icon('loop', 20)} <input type="checkbox" class="tk-loop"> Boucler 2 mesures</label>
+  </footer>
   </div>`;
   const q = (s) => main.querySelector(s);
 
   function drawCapo() {
     const shapes = uniq().map(shape);
     q('.tk-capo').innerHTML = `<div class="row wrap">
-      <b>🎚️ Capodastre :</b>
-      <select class="tk-capo-sel">${[...Array(8).keys()].map((c) => `<option value="${c}" ${c === capo ? 'selected' : ''}>${c === 0 ? 'Sans capo' : 'Case ' + c}${c === suggested ? ' ✨ conseillé' : ''}</option>`).join('')}</select>
+      <b>Capodastre :</b>
+      <select class="tk-capo-sel">${[...Array(8).keys()].map((c) => `<option value="${c}" ${c === capo ? 'selected' : ''}>${c === 0 ? 'Sans capo' : 'Case ' + c}${c === suggested ? ' (conseillé)' : ''}</option>`).join('')}</select>
       <span class="muted">${capo ? `Pose le capodastre sur la case ${capo} : tu joues les formes ${shapes.map(pretty).join(', ')} et ça sonne comme le morceau.` : `Accords : ${shapes.map(pretty).join(', ')}.`}
       ${suggested && capo !== suggested ? ` Avec un capo en case ${suggested}, les accords seraient plus faciles.` : ''}</span></div>
       ${capo ? '<p class="muted tk-capo-help">Un capodastre (≈ 10 €) est une pince qui « raccourcit » les cordes. Sans capo, tu peux quand même jouer : choisis « Sans capo ».</p>' : ''}`;
@@ -179,7 +183,7 @@ export async function trackPage(main, id, onCleanup) {
     q('.tk-strip').innerHTML = `<div class="tk-track" style="width:${R.duration * PXS + 600}px">${R.segments
       .map(
         (s, i) => `<div class="tk-seg ${s.chord === 'N' ? 'none' : ''}" data-i="${i}" style="left:${s.start * PXS}px;width:${Math.max(18, (s.end - s.start) * PXS - 3)}px">
-          <b>${s.chord === 'N' ? '—' : esc(pretty(shape(s.chord)))}</b>${s.chord !== 'N' ? `<button class="tk-pen" data-edit="${i}" title="Corriger">✏️</button>` : ''}</div>`
+          <b>${s.chord === 'N' ? '—' : esc(pretty(shape(s.chord)))}</b>${s.chord !== 'N' ? `<button class="tk-pen" data-edit="${i}" title="Corriger" aria-label="Corriger cet accord">${icon('edit', 16)}</button>` : ''}</div>`
       )
       .join('')}${R.beats.map((b, i) => `<i class="tk-beat ${(i - R.downbeat) % 4 === 0 ? 'bar' : ''}" style="left:${b * PXS}px"></i>`).join('')}</div>`;
   }
@@ -238,20 +242,28 @@ export async function trackPage(main, id, onCleanup) {
     if (!audio.paused) raf = requestAnimationFrame(tick);
   };
 
+  const setPlay = (on) => {
+    q('.tk-play').innerHTML = icon(on ? 'pause' : 'play', 32);
+    q('.tk-play').setAttribute('aria-label', on ? 'Pause' : 'Jouer');
+  };
   q('.tk-play').onclick = () => {
     if (audio.paused) {
       audio.play();
-      q('.tk-play').textContent = '⏸ Pause';
+      setPlay(true);
+      timer.start();
+      store.setLast({ href: location.hash, title: t.name, sub: 'Mon morceau traduit' });
       keepAwake(true);
       tick();
     } else {
       audio.pause();
-      q('.tk-play').textContent = '▶ Jouer';
+      setPlay(false);
+      timer.stop();
       keepAwake(false);
     }
   };
   audio.onended = () => {
-    q('.tk-play').textContent = '↻ Rejouer';
+    setPlay(false);
+    timer.stop();
     keepAwake(false);
   };
   q('.tk-back').onclick = () => {
@@ -320,6 +332,7 @@ export async function trackPage(main, id, onCleanup) {
   update(true);
   onCleanup(() => {
     audio.pause();
+    timer.stop();
     cancelAnimationFrame(raf);
     URL.revokeObjectURL(url);
     keepAwake(false);
@@ -344,11 +357,11 @@ export function melodyPage(main, onCleanup) {
       <label>Mesure <select class="me-time"><option value="4">4 temps</option><option value="3">3 temps</option></select></label>
     </div>
     <div class="row wrap">
-      <button class="btn primary big me-rec">🎙️ Enregistrer</button>
-      <label class="btn big">📂 Ou choisir un enregistrement <input type="file" accept="audio/*" class="me-file" hidden></label>
+      <button class="btn primary big me-rec">${icon('mic', 20)} Enregistrer</button>
+      <label class="btn big">${icon('wave', 20)} Ou choisir un enregistrement <input type="file" accept="audio/*" class="me-file" hidden></label>
       <span class="muted me-status"></span>
     </div>
-    <p class="muted">💡 Astuce : un mémo vocal du téléphone marche très bien. Joue régulièrement, sans pédale de piano, dans une pièce calme.
+    <p class="muted">Astuce : un mémo vocal du téléphone marche très bien. Joue régulièrement, sans pédale de piano, dans une pièce calme.
     Pour le tempo, tu peux jouer avec un métronome (page <a href="#/rythme">Rythmes</a>) et indiquer son BPM ci-dessus.</p>
   </div>
   <div class="me-result"></div>`;
@@ -362,14 +375,14 @@ export function melodyPage(main, onCleanup) {
       const bpm = parseInt(q('.me-bpm').value, 10) || null;
       result = await analyze('melody', samples, { bpm, onProgress: (p, m) => status(`${m} ${Math.round(p * 100)} %`) });
       if (!result.notes.length) {
-        status('⚠️ Aucune note reconnue. Rapproche-toi du micro et joue une seule note à la fois.');
+        status('Aucune note reconnue. Rapproche-toi du micro et joue une seule note à la fois.');
         return;
       }
-      status(`✅ ${result.notes.length} notes trouvées, tempo ${result.bpm} BPM${result.octaveShift ? ` (transposé de ${Math.abs(result.octaveShift)} octave${Math.abs(result.octaveShift) > 1 ? 's' : ''} pour le ukulélé)` : ''}.`);
+      status(`${result.notes.length} notes trouvées, tempo ${result.bpm} BPM${result.octaveShift ? ` (transposé de ${Math.abs(result.octaveShift)} octave${Math.abs(result.octaveShift) > 1 ? 's' : ''} pour le ukulélé)` : ''}.`);
       if (!q('.me-bpm').value) q('.me-bpm').value = result.bpm;
       showResult();
     } catch (err) {
-      status(`⚠️ Impossible de lire cet enregistrement (${esc(err.message)}).`);
+      status(`Impossible de lire cet enregistrement (${esc(err.message)}).`);
     }
   }
 
@@ -383,7 +396,7 @@ export function melodyPage(main, onCleanup) {
       Mets deux accords dans une mesure avec une virgule : <code>C,G</code>. Laisse vide pour la mélodie seule.</p>
       <input class="me-chords" placeholder="Am F C G …" style="width:100%">
       <div class="row"><button class="btn me-apply">Mettre à jour l’aperçu</button>
-      <button class="btn primary big me-save">💾 Enregistrer dans « Niveau 2 »</button></div>
+      <button class="btn primary big me-save">${icon('check', 20)} Enregistrer dans mes morceaux</button></div>
       <p class="muted">Notes reconnues : ${result.notes.map((n) => midiToNote(n.midi).replace(/\d/, '')).slice(0, 40).join(' ')}${result.notes.length > 40 ? '…' : ''}</p>
     </div><div class="me-preview"></div>`;
     const piece = () => ({
@@ -406,7 +419,7 @@ export function melodyPage(main, onCleanup) {
     q('.me-save').onclick = () => {
       const p = piece();
       store.update((st) => (st.arrangements = [...(st.arrangements || []), p]));
-      toast('Mélodie enregistrée dans Niveau 2 🎉');
+      toast('Mélodie enregistrée dans tes morceaux');
       location.hash = `#/niveau2/${p.id}`;
     };
     preview();
@@ -417,7 +430,7 @@ export function melodyPage(main, onCleanup) {
   const recBtn = q('.me-rec');
   if (!micAvailable() || !window.MediaRecorder) {
     recBtn.disabled = true;
-    status('🎙️ L’enregistrement direct demande une adresse <b>https</b> : utilise un enregistrement (mémo vocal) en attendant.');
+    status('L’enregistrement direct demande une adresse <b>https</b> : utilise un enregistrement (mémo vocal) en attendant.');
   }
   recBtn.onclick = async () => {
     if (recorder) {
@@ -431,19 +444,19 @@ export function melodyPage(main, onCleanup) {
       recorder.ondataavailable = (e) => chunks.push(e.data);
       recorder.onstop = () => {
         stream.getTracks().forEach((tr) => tr.stop());
-        recBtn.textContent = '🎙️ Enregistrer';
+        recBtn.innerHTML = `${icon('mic', 20)} Enregistrer`;
         recBtn.classList.remove('rec');
         const blob = new Blob(chunks, { type: recorder.mimeType });
         recorder = null;
         if (!left) process(blob);
       };
       recorder.start();
-      recBtn.textContent = '⏹ Arrêter';
+      recBtn.innerHTML = `${icon('close', 20)} Arrêter`;
       recBtn.classList.add('rec');
       status('Enregistrement… joue ta mélodie, puis clique sur « Arrêter ».');
       playNote(69, 0, 0.001); // déverrouille l'audio sur iOS
     } catch {
-      status('⚠️ Micro refusé.');
+      status('Micro refusé.');
     }
   };
   onCleanup(() => {

@@ -1,3 +1,5 @@
+import { icon } from './icons.js';
+
 // Parcours débutant : leçons courtes avec des éléments interactifs.
 // Les blocs <div data-w="..."></div> sont remplacés par des widgets (diagramme, manche, rythme…).
 
@@ -5,7 +7,6 @@ export const LESSONS = [
   {
     id: 'decouvrir',
     title: 'Découvrir ton ukulélé',
-    icon: '🎸',
     minutes: 5,
     body: `
 <p>Bienvenue ! Le ukulélé est l’instrument idéal pour débuter : <b>4 cordes en nylon</b> (douces pour les doigts),
@@ -26,29 +27,27 @@ des accords simples, et on peut jouer de vraies chansons au bout de quelques jou
   <li>Ta <b>main gauche</b> tient le manche : le pouce derrière le manche, les doigts devant, légèrement arrondis.</li>
   <li>Le manche monte un peu vers le haut (environ 15°). Reste détendue : épaules basses !</li>
 </ul>
-<p class="tip">💡 Gauchère ? Va dans <a href="#/reglages">Réglages</a> et coche « Je suis gauchère » : le manche sera affiché à l’envers.</p>`,
+<p class="tip">Gauchère ? Va dans <a href="#/reglages">Réglages</a> et coche « Je suis gauchère » : le manche sera affiché à l’envers.</p>`,
   },
   {
     id: 'cordes',
     title: 'Les 4 cordes : Sol, Do, Mi, La',
-    icon: '🎶',
     minutes: 5,
     body: `
 <p>Ton ukulélé a 4 cordes. En le tenant, de la corde la plus proche de ton visage à celle la plus proche du sol :</p>
 <p class="big-strings"><span class="badge sg">Sol (G)</span> <span class="badge sc">Do (C)</span> <span class="badge se">Mi (E)</span> <span class="badge sa">La (A)</span></p>
 <p>Les musiciens utilisent souvent les lettres anglaises : <b>G C E A</b>. Tu les verras partout sur internet, donc l’outil affiche les deux.
-Petit moyen mnémotechnique : « <b>G</b>entil <b>C</b>hat <b>E</b>n <b>A</b>vion » 🐱✈️.</p>
+Petit moyen mnémotechnique : « <b>G</b>entil <b>C</b>hat <b>E</b>n <b>A</b>vion ».</p>
 <p>Clique sur chaque corde pour entendre son son :</p>
 <div data-w="strings"></div>
 <p>Sur l’écran, le manche est dessiné comme quand tu regardes ton ukulélé en baissant les yeux : la tête à gauche,
 la corde de Sol en haut. Chaque corde garde toujours la même couleur dans l’outil.</p>
 <div data-w="fretboard:open"></div>
-<p class="tip">🤔 Surprise : la corde de Sol (en haut) sonne plus <b>aigu</b> que la corde de Do. C’est normal, c’est ce qui donne au ukulélé son son si joyeux !</p>`,
+<p class="tip">Surprise : la corde de Sol (en haut) sonne plus <b>aigu</b> que la corde de Do. C’est normal, c’est ce qui donne au ukulélé son son si joyeux !</p>`,
   },
   {
     id: 'accorder',
     title: 'Accorder ton ukulélé',
-    icon: '🎚️',
     minutes: 5,
     body: `
 <p>Avant chaque séance, on vérifie que le ukulélé est <b>accordé</b> (que chaque corde sonne à la bonne hauteur).
@@ -58,16 +57,15 @@ Un instrument désaccordé sonne « faux » même si tu joues parfaitement : c�
   <li>Va doucement : un petit quart de tour suffit souvent.</li>
   <li>Les cordes neuves se détendent beaucoup les premiers jours : il faudra réaccorder souvent, c’est normal.</li>
 </ul>
-<p><a class="btn primary" href="#/accordeur">🎤 Ouvrir l’accordeur</a></p>
+<p><a class="btn primary" href="#/accordeur">${icon('mic', 18)} Ouvrir l’accordeur</a></p>
 <p>L’accordeur utilise le micro de ta tablette ou de ton ordinateur et t’indique s’il faut tendre ou détendre.
 Tu peux aussi accorder à l’oreille avec les sons de référence :</p>
 <div data-w="strings"></div>
-<p class="tip">💡 Une application d’accordeur sur ton téléphone, ou un petit accordeur à pince (environ 10 €), fonctionne très bien aussi.</p>`,
+<p class="tip">Une application d’accordeur sur ton téléphone, ou un petit accordeur à pince (environ 10 €), fonctionne très bien aussi.</p>`,
   },
   {
     id: 'gratter',
     title: 'Gratter les cordes',
-    icon: '✋',
     minutes: 10,
     body: `
 <p>La main droite fait le rythme : on dit qu’elle <b>gratte</b>. Pour commencer :</p>
@@ -80,12 +78,11 @@ Tu peux aussi accorder à l’oreille avec les sons de référence :</p>
 <p>Exercice : sans appuyer sur aucune corde (ça s’appelle jouer « à vide », c’est en fait l’accord <b>Am7</b>),
 gratte un coup vers le bas à chaque clic du métronome. Commence à 60 BPM (battements par minute).</p>
 <div data-w="strum:d4:Am7"></div>
-<p class="tip">🎯 Le but n’est pas d’aller vite, mais d’être <b>régulière</b> : pile sur le clic. Quand c’est facile, monte un peu le tempo.</p>`,
+<p class="tip">Le but n’est pas d’aller vite, mais d’être <b>régulière</b> : pile sur le clic. Quand c’est facile, monte un peu le tempo.</p>`,
   },
   {
     id: 'premier-accord',
     title: 'Ton premier accord : Do (C)',
-    icon: '⭐',
     minutes: 10,
     learn: ['C'],
     body: `
@@ -114,14 +111,13 @@ gratte un coup vers le bas à chaque clic du métronome. Commence à 60 BPM (bat
 <div data-w="fretboard:chord:C"></div>
 <h3>Ta première chanson !</h3>
 <p>« Frère Jacques » se joue avec seulement l’accord de Do. Gratte 4 coups vers le bas par mesure et chante (ou fredonne) :</p>
-<p><a class="btn primary" href="#/chansons/frere-jacques">▶ Jouer Frère Jacques</a></p>
-<p class="tip">😬 Le bout des doigts fait un peu mal les premiers jours ? C’est normal : de la corne va se former en 1 à 2 semaines.
+<p><a class="btn primary" href="#/chansons/frere-jacques">${icon('play', 18)} Jouer Frère Jacques</a></p>
+<p class="tip">Le bout des doigts fait un peu mal les premiers jours ? C’est normal : de la corne va se former en 1 à 2 semaines.
 Joue souvent mais peu longtemps (10-15 minutes).</p>`,
   },
   {
     id: 'la-mineur',
     title: 'Deuxième accord : La mineur (Am)',
-    icon: '🌙',
     minutes: 10,
     learn: ['Am'],
     body: `
@@ -130,7 +126,7 @@ Joue souvent mais peu longtemps (10-15 minutes).</p>`,
   <div data-w="chord:Am"></div>
   <div>
     <p><b>La mineur (Am)</b> : pose ton <b>majeur (2)</b> sur la <b>2e case</b> de la corde de <b>Sol</b> (la corde du haut).</p>
-    <p>Encore un seul doigt ! 😊</p>
+    <p>Encore un seul doigt !</p>
   </div>
 </div>
 <div data-w="fretboard:chord:Am"></div>
@@ -140,12 +136,11 @@ Joue souvent mais peu longtemps (10-15 minutes).</p>`,
   <li>Entraîne-toi d’abord sans gratter : C → Am → C → Am… regarde tes doigts.</li>
   <li>Puis avec l’exercice ci-dessous : 4 temps sur chaque accord. L’écran te prévient quand le changement arrive (« Prépare-toi ! »).</li>
 </ul>
-<p><a class="btn primary" href="#/entrainement?chords=C,Am&bpm=60">🔁 Exercice C ↔ Am</a></p>`,
+<p><a class="btn primary" href="#/entrainement?chords=C,Am&bpm=60">${icon('repeat', 18)} Exercice C ↔ Am</a></p>`,
   },
   {
     id: 'fa-sol7',
     title: 'Fa (F) et Sol 7 (G7)',
-    icon: '🎵',
     minutes: 15,
     learn: ['F', 'G7'],
     body: `
@@ -161,19 +156,18 @@ Joue souvent mais peu longtemps (10-15 minutes).</p>`,
   <b>majeur (2)</b> case 2 sur la corde de Do, <b>annulaire (3)</b> case 2 sur la corde de La.</p></div>
 </div>
 <p>Exercices de changement :</p>
-<p><a class="btn" href="#/entrainement?chords=Am,F&bpm=60">🔁 Am ↔ F</a>
-<a class="btn" href="#/entrainement?chords=C,G7&bpm=60">🔁 C ↔ G7</a>
-<a class="btn" href="#/entrainement?chords=C,F,G7&bpm=60">🔁 C → F → G7</a></p>
+<p><a class="btn" href="#/entrainement?chords=Am,F&bpm=60">${icon('repeat', 18)} Am ↔ F</a>
+<a class="btn" href="#/entrainement?chords=C,G7&bpm=60">${icon('repeat', 18)} C ↔ G7</a>
+<a class="btn" href="#/entrainement?chords=C,F,G7&bpm=60">${icon('repeat', 18)} C → F → G7</a></p>
 <h3>Des chansons pour toi</h3>
-<p><a class="btn primary" href="#/chansons/au-clair-de-la-lune">▶ Au clair de la lune</a>
-<a class="btn primary" href="#/chansons/sur-le-pont">▶ Sur le pont d’Avignon</a>
-<a class="btn primary" href="#/chansons/ah-vous-dirai-je">▶ Ah ! vous dirai-je, maman</a></p>
-<p class="tip">💡 Dans le lecteur, baisse la <b>vitesse</b> à 50-60 % au début, ou active le mode <b>Pas-à-pas</b> : l’accord suivant n’arrive que quand tu appuies sur la barre Espace.</p>`,
+<p><a class="btn primary" href="#/chansons/au-clair-de-la-lune">${icon('play', 18)} Au clair de la lune</a>
+<a class="btn primary" href="#/chansons/sur-le-pont">${icon('play', 18)} Sur le pont d’Avignon</a>
+<a class="btn primary" href="#/chansons/ah-vous-dirai-je">${icon('play', 18)} Ah ! vous dirai-je, maman</a></p>
+<p class="tip">Dans le lecteur, baisse la <b>vitesse</b> à 50-60 % au début, ou active le mode <b>Pas-à-pas</b> : l’accord suivant n’arrive que quand tu appuies sur la barre Espace.</p>`,
   },
   {
     id: 'rythmes',
     title: 'Les rythmes : vers le bas, vers le haut',
-    icon: '🥁',
     minutes: 15,
     body: `
 <p>Jusqu’ici tu grattais seulement vers le bas (↓). On peut aussi gratter vers le <b>haut</b> (↑) avec la pulpe de l’index, en remontant.</p>
@@ -187,12 +181,11 @@ Quand on ne doit pas gratter, la main continue son mouvement… mais dans le vid
 <h3>Le rythme « Island », LE rythme du ukulélé</h3>
 <p>Bas, Bas-Haut, (vide) Haut-Bas-Haut. Il paraît difficile au début, mais une fois dans la main, il ne te quitte plus !</p>
 <div data-w="strum:island:C"></div>
-<p class="tip">💡 Va voir la page <a href="#/rythme">Rythmes</a> pour t’entraîner avec tous les rythmes, et choisis le rythme de ton choix dans le lecteur de chansons.</p>`,
+<p class="tip">Va voir la page <a href="#/rythme">Rythmes</a> pour t’entraîner avec tous les rythmes, et choisis le rythme de ton choix dans le lecteur de chansons.</p>`,
   },
   {
     id: 'sol',
     title: 'Sol (G) et les 4 accords magiques',
-    icon: '✨',
     minutes: 15,
     learn: ['G'],
     body: `
@@ -205,14 +198,13 @@ Quand on ne doit pas gratter, la main continue son mouvement… mais dans le vid
 <h3>Les 4 accords magiques : C – G – Am – F</h3>
 <p>Ces 4 accords, joués dans cet ordre, sont utilisés dans <b>des centaines de chansons pop</b> (Let It Be, Someone Like You, I’m Yours, Africa…).
 Une fois que tu les enchaînes, un énorme répertoire s’ouvre à toi !</p>
-<p><a class="btn" href="#/entrainement?chords=C,G,Am,F&bpm=60">🔁 Exercice C → G → Am → F</a>
-<a class="btn primary" href="#/chansons/quatre-accords">▶ Les 4 accords magiques</a>
-<a class="btn primary" href="#/chansons/kumbaya">▶ Kumbaya</a></p>`,
+<p><a class="btn" href="#/entrainement?chords=C,G,Am,F&bpm=60">${icon('repeat', 18)} Exercice C → G → Am → F</a>
+<a class="btn primary" href="#/chansons/quatre-accords">${icon('play', 18)} Les 4 accords magiques</a>
+<a class="btn primary" href="#/chansons/kumbaya">${icon('play', 18)} Kumbaya</a></p>`,
   },
   {
     id: 'tablature',
     title: 'Jouer des notes : la tablature',
-    icon: '🎼',
     minutes: 15,
     body: `
 <p>En plus des accords, on peut jouer une <b>mélodie</b> note par note. Pour ça, on utilise la <b>tablature</b> (ou « tab ») :
@@ -225,19 +217,18 @@ pas besoin de solfège !</p>
 <p>Sur le manche ci-dessous, clique sur une case : tu entends la note et tu vois son nom.
 Active « Afficher le nom des notes » pour voir où se trouvent Do, Ré, Mi…</p>
 <div data-w="fretboard:notes"></div>
-<p class="tip">⚠️ Sur les sites internet, les tablatures sont souvent dessinées avec la corde de <b>La en haut</b> (à l’inverse du manche ici).
+<p class="tip">Sur les sites internet, les tablatures sont souvent dessinées avec la corde de <b>La en haut</b> (à l’inverse du manche ici).
 Tu peux choisir cette présentation dans les <a href="#/reglages">Réglages</a>. Les noms des cordes sont toujours écrits à gauche pour t’aider.</p>
-<p><a class="btn primary" href="#/melodies/frere-jacques">▶ Mélodie : Frère Jacques</a>
-<a class="btn primary" href="#/melodies/twinkle">▶ Ah ! vous dirai-je, maman</a></p>
-<p>Dans les mélodies, essaie le mode <b>🎤 J’attends ta note</b> : l’outil écoute avec le micro et n’avance que quand tu as joué la bonne note.</p>`,
+<p><a class="btn primary" href="#/melodies/frere-jacques">${icon('play', 18)} Mélodie : Frère Jacques</a>
+<a class="btn primary" href="#/melodies/twinkle">${icon('play', 18)} Ah ! vous dirai-je, maman</a></p>
+<p>Dans les mélodies, essaie le mode <b>J’attends ta note</b> : l’outil écoute avec le micro et n’avance que quand tu as joué la bonne note.</p>`,
   },
   {
     id: 'routine',
     title: 'Ta routine pour progresser',
-    icon: '🌱',
     minutes: 5,
     body: `
-<p>Bravo, tu as terminé le parcours de base ! 🎉 Voici comment continuer :</p>
+<p>Bravo, tu as terminé le parcours de base ! Voici comment continuer :</p>
 <h3>Une séance type (15 minutes par jour)</h3>
 <ol>
   <li><b>2 min</b> : accorder le ukulélé.</li>
@@ -257,7 +248,6 @@ et peut même la <b>transposer</b> pour la rendre plus facile.</p>`,
   {
     id: 'niveau2',
     title: 'Niveau 2 : accords + mélodie (fingerstyle)',
-    icon: '🎶',
     minutes: 20,
     body: `
 <p>Si tu joues du piano, tu as l’habitude d’une main pour l’accompagnement et d’une main pour la mélodie.
@@ -278,14 +268,14 @@ Au ukulélé, c’est possible aussi : ça s’appelle le <b>fingerstyle</b> (jo
 </ul>
 <h3>Comment travailler (comme au piano !)</h3>
 <ol>
-  <li><b>Mélodie seule</b> (bouton ☝️) : l’appli joue l’accompagnement pour toi.</li>
-  <li><b>Pouce seul</b> (bouton 👍) : l’appli joue la mélodie, tu fais l’accompagnement.</li>
-  <li><b>Les deux</b> (🙌), à 50 % de la vitesse, en <b>Pas-à-pas</b> si besoin (barre Espace = note suivante).</li>
+  <li><b>Mélodie seule</b> : l’appli joue l’accompagnement pour toi.</li>
+  <li><b>Pouce seul</b> : l’appli joue la mélodie, tu fais l’accompagnement.</li>
+  <li><b>Les deux</b>, à 50 % de la vitesse, en <b>Pas-à-pas</b> si besoin (barre Espace = note suivante).</li>
   <li>Active « Répéter la phrase » pour boucler 4 mesures jusqu’à ce qu’elles soient fluides.</li>
 </ol>
-<p class="tip">💡 Pince les cordes, ne les gratte pas : le pouce pousse la corde vers le bas, l’index et le majeur la tirent vers le haut.
+<p class="tip">Pince les cordes, ne les gratte pas : le pouce pousse la corde vers le bas, l’index et le majeur la tirent vers le haut.
 Pose ton annulaire ou ton auriculaire sur la caisse pour stabiliser la main.</p>
-<p><a class="btn primary" href="#/niveau2/canon">▶ Commencer par le Canon de Pachelbel</a>
+<p><a class="btn primary" href="#/niveau2/canon">${icon('play', 18)} Commencer par le Canon de Pachelbel</a>
 <a class="btn" href="#/niveau2">Tous les morceaux du niveau 2</a></p>`,
   },
 ];

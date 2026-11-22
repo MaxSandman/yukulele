@@ -1,24 +1,41 @@
-# 🌺 Ukulélé Facile
+# Ukulélé Facile
 
 Une application web pour apprendre le ukulélé **en partant de zéro**, sans solfège.
 Elle est faite pour être posée devant soi (tablette, ordi, téléphone) pendant qu'on joue.
 
-## Ce qu'elle fait
+## Comment elle est organisée
 
-| Page | À quoi ça sert |
+Quatre onglets, en bas de l'écran :
+
+| Onglet | Ce qu'on y trouve |
 |---|---|
-| 📚 **Leçons** | 11 leçons courtes, dans l'ordre : tenir le ukulélé, les cordes, accorder, gratter, premiers accords (C, Am, F, G7, G), rythmes, tablature, routine. Les accords appris sont mémorisés. |
-| 🎤 **Chansons** | Lecteur synchronisé : **accord actuel** en grand + **accord suivant** (« Prépare-toi ! »), compteur de temps, flèches de grattage qui s'allument, paroles qui défilent, accord affiché sur le manche. Vitesse réglable (40 à 130 %), métronome, le ukulélé qui joue en même temps, mode **pas-à-pas**, répétition d'une ligne, transposition. |
-| ✍️ **Ajouter une chanson** | Le « traducteur » : on colle les accords d'une chanson trouvée sur internet (format « accords au-dessus des paroles » ou `[C]paroles`, noms anglais ou français `Lam`, `Sol7`…). L'outil reconnaît les accords, dessine les diagrammes, signale les accords difficiles, et peut **transposer automatiquement vers des accords plus faciles** ou simplifier (`Cmaj7 → C`). |
-| 🖐️ **Accords** | Dictionnaire avec diagrammes, doigtés (couleur par doigt), son, positions alternatives. Les accords absents du dictionnaire sont calculés automatiquement. |
-| 🎸 **Manche** | Manche interactif : clic = son + nom de la note, gammes, notes d'un accord. |
-| 🥁 **Rythmes** | 8 rythmes de grattage avec métronome et exemple sonore. |
-| 🎼 **Mélodies** | Tablature animée note par note (Frère Jacques, Au clair de la lune…), avec un mode **🎤 « J'attends ta note »** qui écoute au micro. |
-| 🔁 **Entraînement** | Enchaînements d'accords au tempo (l'exercice le plus utile) + quiz « trouve la note sur le manche ». |
-| 🎚️ **Accordeur** | Au micro, ou à l'oreille avec des sons de référence. |
-| 🎶 **Niveau 2 : accords + mélodie** | Fingerstyle, pour qui a l'habitude du piano à deux mains : le **pouce** joue l'accompagnement (la « main gauche » du piano), l'**index/majeur** la mélodie (la « main droite »). Tablature en couleurs à deux couches, forme d'accord de la main gauche, entraînement **mains séparées** (l'appli joue l'autre partie), pas-à-pas, boucle de 4 mesures, 6 styles d'accompagnement. Morceaux : Canon (Pachelbel), Tetris (Korobeiniki), Greensleeves, Gymnopédie n°1 (Satie), The Entertainer (Joplin), Lettre à Élise. |
-| 🎧 **Traduire un morceau** | On donne un **fichier audio** (mp3, m4a, wav…) : l'outil détecte le tempo, les temps, la tonalité et les **accords**, puis on joue **par-dessus le vrai morceau** (accord actuel/suivant, compte à rebours, frise des accords, vitesse réduite sans changer la hauteur, boucle). Suggestion de **capodastre** pour avoir des formes faciles, correction d'un accord en un clic, export vers le carnet de chansons. |
-| 🎹 **Transcrire une mélodie** | On joue la mélodie (piano main droite, voix, sifflement) au micro ou via un mémo vocal : l'outil la transcrit en tablature ukulélé, et on peut y ajouter les accords pour en faire un morceau du niveau 2. |
+| **Aujourd'hui** | La **séance du jour** en un bouton (accorder → échauffement → nouvelle notion → morceau, 10 à 20 min), calculée d'après la progression. Une barre en bas de l'écran guide d'une étape à l'autre. Autour : reprendre le dernier morceau joué, l'avancement dans le parcours, les accords connus et la série de jours de pratique. |
+| **Apprendre** | Le parcours en 12 étapes (de « tenir le ukulélé » jusqu'aux accords + mélodie), l'entraînement aux enchaînements d'accords, les rythmes et le quiz du manche. |
+| **Morceaux** | Une seule bibliothèque : chansons (chant + accords), mélodies note par note, morceaux « accords + mélodie » (niveau 2) et morceaux perso. Filtres « Je peux les jouer », recherche, suggestions « Pour toi ». **Ajouter un morceau** : depuis un fichier audio, en collant des accords, ou en jouant/chantant une mélodie. |
+| **Outils** | Accordeur, dictionnaire d'accords, manche interactif, métronome et rythmes, réglages. |
+
+Tous les morceaux s'ouvrent dans le **lecteur « scène »** : plein écran, sur fond sombre, lisible à un mètre.
+On y voit l'accord à jouer en très grand, l'accord suivant avec un compte à rebours (« Prépare-toi ! »),
+les temps, les flèches de grattage et les paroles (ligne en cours et suivante).
+Trois commandes seulement (Jouer, Vitesse, Boucler) et trois modes (**Découverte** 60 %, **Entraînement** 80 % en boucle,
+**Concert** 100 %). Le reste est dans le panneau Réglages : métronome, accompagnement, pas-à-pas, manche, tonalité, rythme.
+
+## Ce qu'elle sait faire
+
+| Fonction | Détail |
+|---|---|
+| **Leçons** | 12 leçons courtes, dans l'ordre : tenir le ukulélé, les cordes, accorder, gratter, premiers accords (C, Am, F, G7, G), rythmes, tablature, routine, accords + mélodie. Les accords appris sont mémorisés. |
+| **Lecteur de chansons** | Accord actuel et suivant, temps, rythme, paroles synchronisées, vitesse de 50 à 110 %, métronome, le ukulélé qui joue en même temps, pas-à-pas, boucle sur une ligne, transposition. |
+| **Ajouter une chanson** | Le « traducteur » : on colle les accords d'une chanson trouvée sur internet (format « accords au-dessus des paroles » ou `[C]paroles`, noms anglais ou français `Lam`, `Sol7`…). L'outil reconnaît les accords, dessine les diagrammes, signale les accords difficiles, et peut **transposer automatiquement vers des accords plus faciles** ou simplifier (`Cmaj7 → C`). |
+| **Accords** | Dictionnaire avec diagrammes, doigtés (couleur par doigt), son, positions alternatives. Les accords absents du dictionnaire sont calculés automatiquement. |
+| **Manche** | Manche interactif : clic = son + nom de la note, gammes, notes d'un accord. |
+| **Rythmes** | 8 rythmes de grattage avec métronome et exemple sonore. |
+| **Mélodies** | Tablature animée note par note, avec un mode « J'attends ta note » qui écoute au micro. |
+| **Entraînement** | Enchaînements d'accords au tempo (l'exercice le plus utile) + quiz « trouve la note sur le manche ». |
+| **Accordeur** | Au micro, ou à l'oreille avec des sons de référence. |
+| **Accords + mélodie (niveau 2)** | Fingerstyle, pour qui a l'habitude du piano à deux mains : le **pouce** joue l'accompagnement (la « main gauche » du piano), l'**index/majeur** la mélodie (la « main droite »). Tablature en couleurs à deux couches, entraînement **mains séparées**, pas-à-pas, boucle de 4 mesures, 6 styles d'accompagnement. Morceaux : Canon (Pachelbel), Tetris (Korobeiniki), Greensleeves, Gymnopédie n°1 (Satie), The Entertainer (Joplin), Lettre à Élise. |
+| **Traduire un morceau** | On donne un **fichier audio** (mp3, m4a, wav…) : l'outil détecte le tempo, les temps, la tonalité et les **accords**, puis on joue **par-dessus le vrai morceau**. Suggestion de **capodastre**, correction d'un accord en un clic, ajout aux chansons. |
+| **Transcrire une mélodie** | On joue la mélodie (piano main droite, voix, sifflement) au micro ou via un mémo vocal : l'outil la transcrit en tablature ukulélé, et on peut y ajouter les accords. |
 
 Tout est en local dans le navigateur (pas de compte, pas de base de données). La progression et les
 chansons ajoutées sont stockées dans le navigateur, avec export/import dans **Réglages**.
@@ -37,16 +54,19 @@ YouTube n'est pas pris en charge (il faut un fichier audio).
 ## Structure
 
 ```
-ukulele/
+yukulele/
 ├── docker-compose.yml   # conteneur nginx (port 8095)
 ├── nginx.conf
 └── app/                 # le site (HTML/CSS/JS, aucune compilation nécessaire)
-    ├── index.html
-    ├── css/style.css
-    └── js/              # app.js (pages), player.js (lecteur), parser.js (traducteur de texte),
-                         # chords.js (dictionnaire), audio.js (son, métronome, micro),
-                         # arrange.js + fingerstyle.js (niveau 2), analysis-worker.js (analyse audio),
-                         # translate.js (pages « Traduire un morceau »), ...
+    ├── index.html       # coquille : en-tête + 4 onglets
+    ├── css/style.css    # système de design (couleurs, polices, composants, lecteur « scène »)
+    ├── fonts/           # Fredoka et Nunito, hébergées localement (aucune dépendance internet)
+    └── js/              # app.js (routeur et pages secondaires), hubs.js (les 4 espaces),
+                         # session.js (séance du jour, temps de pratique), library.js (catalogue),
+                         # player.js (lecteur « scène »), icons.js (icônes dessinées),
+                         # parser.js (traducteur de texte), chords.js (dictionnaire),
+                         # audio.js (son, métronome, micro), arrange.js + fingerstyle.js (niveau 2),
+                         # analysis-worker.js (analyse audio), translate.js (morceaux traduits), ...
 ```
 
 Pour ajouter une chanson « officielle » au carnet, l'éditer dans `app/js/songs.js` (format ChordPro, `[C:2]` = 2 temps).
